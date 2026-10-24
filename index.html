@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Routine Tracker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-wrap">
+    
+    <!-- Clean Header -->
+    <header class="top-bar">
+      <div class="top-bar-left">
+        <h1 class="app-title" id="appTitle">Routine Tracker</h1>
+      </div>
+      <div class="top-bar-right">
+        <button id="stealthBtn" class="pill-btn" title="Toggle Private Mode">
+          <span class="btn-dot"></span> Private
+        </button>
+        <button id="soundBtn" class="pill-btn active" title="Toggle Sound">
+          🔊 Sound
+        </button>
+      </div>
+    </header>
+
+    <!-- Simple Navigation -->
+    <nav class="nav-segment">
+      <button class="segment-btn active" data-tab="session">⏱️ Workout</button>
+      <button class="segment-btn" data-tab="routine">📋 All Exercises (<span id="routineCountBadge">2</span>)</button>
+      <button class="segment-btn" data-tab="stats">📅 5-Day Weekly Goal</button>
+    </nav>
+
+    <!-- ================================================================= -->
+    <!-- TAB 1: WORKOUT VIEW -->
+    <!-- ================================================================= -->
+    <main id="tab-session" class="tab-pane active">
+      
+      <!-- Weekly 5-Day Consistency Bar -->
+      <div class="goal-banner">
+        <div class="goal-info">
+          <span class="goal-label">Weekly Goal: 5 Days</span>
+          <strong class="goal-count" id="weeklyGoalLabel">0 of 5 days done</strong>
+        </div>
+        <div class="week-bubbles" id="weekDots">
+          <!-- Mon-Sun check bubbles -->
+        </div>
+      </div>
+
+      <!-- Main Exercise Card -->
+      <div class="card workout-main-card">
+        
+        <!-- Exercise Step & Title -->
+        <div class="ex-heading">
+          <div class="ex-step" id="currentStepBadge">Exercise 1 of 2</div>
+          <h2 class="ex-name" id="currentExerciseName">Primary Exercise (Timed)</h2>
+        </div>
+
+        <!-- ======================= -->
+        <!-- MODE A: TIMED EXERCISE -->
+        <!-- ======================= -->
+        <div id="timedDisplay" class="mode-panel">
+          
+          <!-- Automated Sequence Flow Indicators (with clickable Rest pill) -->
+          <div class="flow-chips">
+            <div class="flow-chip active" id="chipPrep">
+              <span class="chip-step">1</span>
+              <span>Prep (<span id="chipPrepSec">30s</span>)</span>
+            </div>
+            <div class="flow-arrow">➔</div>
+            <div class="flow-chip" id="chipWork">
+              <span class="chip-step">2</span>
+              <span>Exercise (<span id="chipWorkSec">3m</span>)</span>
+            </div>
+            <div class="flow-arrow">➔</div>
+            <div class="flow-chip clickable" id="chipBreak" title="Click to edit break time">
+              <span class="chip-step">3</span>
+              <span>Break: <strong id="chipBreakSec">1m 00s</strong> <span class="edit-pen">✎</span></span>
+            </div>
+          </div>
+          <div class="auto-notice">⚡ Automatic flow: Timer automatically switches from Prep ➔ Exercise ➔ Break ➔ Next Rep</div>
+
+          <!-- Active Phase Tag -->
+          <div class="phase-tag phase-ready" id="phaseTag">
+            <span id="phaseTagText">GET READY (30s)</span>
+          </div>
+
+          <!-- Giant Digital Countdown Timer -->
+          <div class="timer-huge-wrap">
+            <div class="timer-huge" id="timerDigits">00:30</div>
+            <div class="timer-sub" id="timerSublabel">Prep countdown</div>
+          </div>
+
+          <!-- Direct Rest Edit Pill (Right on workout card) -->
+          <div class="rest-quick-container">
+            <button class="rest-edit-pill" id="quickEditRestBtn" title="Click to change break duration">
+              <span>☕ Rest / Break:</span>
+              <strong id="quickRestDisplay">1m 00s</strong>
+              <span class="pill-edit-icon">✎ Edit</span>
+            </button>
+          </div>
+
+          <!-- Big Sets & Reps Counter -->
+          <div class="reps-box">
+            <div class="rep-col">
+              <span class="rep-label">SET</span>
+              <span class="rep-value" id="setCounterBadge">1 of 3</span>
+            </div>
+            <div class="rep-sep">/</div>
+            <div class="rep-col">
+              <span class="rep-label">REP</span>
+              <span class="rep-value" id="repCounterBadge">1 of 3</span>
+            </div>
+          </div>
+
+          <!-- Quick Action Buttons -->
+          <div class="quick-btns">
+            <button class="secondary-btn" id="skipPhaseBtn" title="Immediately advance to next phase">Skip to Next Phase ⏩</button>
+            <button class="secondary-btn" id="resetCurrentExBtn">Reset Timer</button>
+          </div>
+
+        </div>
+
+        <!-- ============================== -->
+        <!-- MODE B: UNTIMED TIMESTAMP LOG -->
+        <!-- ============================== -->
+        <div id="untimedDisplay" class="mode-panel" style="display: none;">
+          <div class="untimed-box">
+            <div class="timestamp-row">
+              <span class="time-lbl">Started Exercise At:</span>
+              <strong class="time-val" id="untimedStartTimeDisplay">Press START to record time</strong>
+            </div>
+
+            <div class="elapsed-box">
+              <span class="elapsed-lbl">Time Elapsed</span>
+              <div class="elapsed-val" id="untimedElapsedDigits">00:00:00</div>
+            </div>
+
+            <div class="manual-counter-row">
+              <div class="counter-group">
+                <span class="counter-lbl">Sets Done</span>
+                <div class="counter-stepper">
+                  <button class="step-btn" id="untimedSetDec">−</button>
+                  <span class="step-num" id="untimedSetCount">1</span>
+                  <button class="step-btn" id="untimedSetInc">+</button>
+                </div>
+              </div>
+
+              <div class="counter-group">
+                <span class="counter-lbl">Reps Done</span>
+                <div class="counter-stepper">
+                  <button class="step-btn" id="untimedRepDec">−</button>
+                  <span class="step-num" id="untimedRepCount">1</span>
+                  <button class="step-btn" id="untimedRepInc">+</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- GIANT PRIMARY START / PAUSE BUTTON -->
+        <div class="main-btn-wrap">
+          <button class="btn-start" id="mainActionBtn">
+            <span id="mainActionIcon">▶</span>
+            <span id="mainActionLabel">START</span>
+          </button>
+        </div>
+
+        <!-- Switch Exercises Bottom Row -->
+        <div class="bottom-controls">
+          <button class="text-btn" id="prevExBtn">← Previous Exercise</button>
+          <button class="text-btn" id="nextExBtn">Next Exercise →</button>
+        </div>
+
+        <div class="finish-row">
+          <button class="finish-btn" id="finishWorkoutBtn">✓ Complete & Log Today's Workout</button>
+        </div>
+
+      </div>
+
+      <!-- ============================================================= -->
+      <!-- COMPACT & EXPANDABLE ACCORDION: QUICK EDIT TIMERS & TARGETS -->
+      <!-- ============================================================= -->
+      <div class="card settings-inline-card compact-accordion" id="inlineSettingsCard">
+        
+        <!-- Clickable Accordion Header with Rotating Chevron -->
+        <div class="settings-card-head clickable" id="toggleInlineSettingsBtn" title="Click to expand/collapse">
+          <div class="head-left">
+            <div class="head-title-line">
+              <h3>⚡ Quick Edit Timers & Targets</h3>
+            </div>
+            <span class="compact-summary" id="compactSummaryText">30s prep • 3m 00s work • 1m 00s rest • 3s × 3r</span>
+          </div>
+          <div class="head-right">
+            <svg class="chevron-icon" id="settingsChevron" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </div>
+        </div>
+
+        <!-- Collapsible Content -->
+        <div class="accordion-content" id="inlineSettingsContent">
+          <!-- Timed Controls (Prep, Work, Break) -->
+          <div id="timedAdjusters">
+            <div class="adjuster-row">
+              <div class="adj-info">
+                <span class="adj-name">⏱️ Get Ready (Prep)</span>
+                <span class="adj-desc">Time before exercise starts</span>
+              </div>
+              <div class="adj-controls">
+                <button class="adj-btn" id="adjPrepMinus">− 5s</button>
+                <strong class="adj-val" id="adjPrepVal">30s</strong>
+                <button class="adj-btn" id="adjPrepPlus">+ 5s</button>
+              </div>
+            </div>
+
+            <div class="adjuster-row">
+              <div class="adj-info">
+                <span class="adj-name">🔥 Exercise Time</span>
+                <span class="adj-desc">Active duration per rep</span>
+              </div>
+              <div class="adj-controls">
+                <button class="adj-btn" id="adjWorkMinus">− 30s</button>
+                <strong class="adj-val" id="adjWorkVal">3m 00s</strong>
+                <button class="adj-btn" id="adjWorkPlus">+ 30s</button>
+              </div>
+            </div>
+
+            <!-- Editable Rest Row -->
+            <div class="adjuster-row highlight-row">
+              <div class="adj-info">
+                <span class="adj-name">☕ Break / Rest Time <span class="badge-editable">Click to Edit</span></span>
+                <span class="adj-desc">Rest between each rep & set</span>
+              </div>
+              <div class="adj-controls">
+                <button class="adj-btn" id="adjRestMinus">− 15s</button>
+                <strong class="adj-val clickable-val" id="adjRestVal" title="Click to enter exact rest time">1m 00s ✎</strong>
+                <button class="adj-btn" id="adjRestPlus">+ 15s</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sets & Reps Steppers -->
+          <div class="adjuster-row">
+            <div class="adj-info">
+              <span class="adj-name">🎯 Target Sets</span>
+              <span class="adj-desc">Total sets to complete</span>
+            </div>
+            <div class="adj-controls">
+              <button class="adj-btn" id="adjSetsMinus">−</button>
+              <strong class="adj-val" id="adjSetsVal">3 Sets</strong>
+              <button class="adj-btn" id="adjSetsPlus">+</button>
+            </div>
+          </div>
+
+          <div class="adjuster-row">
+            <div class="adj-info">
+              <span class="adj-name">🔁 Target Reps</span>
+              <span class="adj-desc">Reps per set</span>
+            </div>
+            <div class="adj-controls">
+              <button class="adj-btn" id="adjRepsMinus">−</button>
+              <strong class="adj-val" id="adjRepsVal">3 Reps</strong>
+              <button class="adj-btn" id="adjRepsPlus">+</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Exercise Sequence Pills -->
+      <div class="sequence-list">
+        <span class="sequence-title">Routine Order:</span>
+        <div class="sequence-tags" id="queueItemList">
+          <!-- Filled by JS -->
+        </div>
+      </div>
+
+    </main>
+
+    <!-- ================================================================= -->
+    <!-- TAB 2: EDIT ROUTINE (ADD / REMOVE / REORDER) -->
+    <!-- ================================================================= -->
+    <main id="tab-routine" class="tab-pane">
+      <div class="section-top">
+        <div>
+          <h2>Your Routine</h2>
+          <p class="section-sub">Add new exercises, remove old ones, or change their order.</p>
+        </div>
+        <button class="primary-btn" id="openAddExerciseModalBtn">+ Add Exercise</button>
+      </div>
+
+      <!-- List of exercises -->
+      <div class="clean-list" id="routineEditorList">
+        <!-- Rendered by JS -->
+      </div>
+
+      <div class="routine-actions">
+        <button class="secondary-btn" id="resetDefaultsBtn">Reset to Default Routine</button>
+        <button class="secondary-btn" id="exportRoutineBtn">Export Backup (JSON)</button>
+        <label class="secondary-btn file-btn">
+          Import Backup
+          <input type="file" id="importRoutineInput" accept=".json" style="display:none;">
+        </label>
+      </div>
+    </main>
+
+    <!-- ================================================================= -->
+    <!-- TAB 3: 5-DAY GOAL & LOGS & CALENDAR WITH NOTES -->
+    <!-- ================================================================= -->
+    <main id="tab-stats" class="tab-pane">
+      
+      <!-- 5-Day Weekly Progress Card -->
+      <div class="card stat-highlight-card">
+        <div class="stat-row">
+          <div>
+            <span class="stat-label">This Week's Progress</span>
+            <div class="stat-big-val" id="statsWeeklyCount">0 <span class="stat-of">/ 5 days</span></div>
+          </div>
+          <div class="streak-badge">
+            <span class="streak-icon">🔥</span>
+            <div>
+              <strong id="statsStreakVal">0</strong> Day Streak
+              <div class="sub-streak">Best: <span id="statsBestStreakVal">0</span> days</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="progress-track">
+          <div class="progress-bar" id="statsWeeklyBar" style="width: 0%;"></div>
+        </div>
+        <p class="stat-footer-text" id="weeklyGoalFeedback">5 workouts a week helps build steady consistency.</p>
+      </div>
+
+      <!-- ============================================================= -->
+      <!-- COMPACT & EXPANDABLE CALENDAR WITH NOTES & CHEVRON -->
+      <!-- ============================================================= -->
+      <div class="card compact-accordion expanded" id="calendarAccordionCard">
+        
+        <!-- Accordion Header with Rotating Chevron -->
+        <div class="settings-card-head clickable" id="toggleCalendarBtn" title="Click to expand/collapse calendar">
+          <div class="head-left">
+            <div class="head-title-line">
+              <h3>📅 Workout Calendar & Daily Notes</h3>
+            </div>
+            <span class="compact-summary" id="calendarSummaryText">Loading calendar...</span>
+          </div>
+          <div class="head-right">
+            <svg class="chevron-icon" id="calendarChevron" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </div>
+        </div>
+
+        <!-- Collapsible Calendar Body -->
+        <div class="accordion-content" id="calendarAccordionContent">
+          
+          <!-- Month Navigation -->
+          <div class="cal-nav-bar">
+            <button class="cal-nav-btn" id="calPrevMonthBtn" title="Previous Month">‹</button>
+            <h4 class="cal-month-title" id="calMonthTitle">October 2026</h4>
+            <button class="cal-nav-btn" id="calNextMonthBtn" title="Next Month">›</button>
+          </div>
+
+          <!-- Calendar Days Header (Mon - Sun) -->
+          <div class="cal-grid-days">
+            <span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span>
+          </div>
+
+          <!-- Calendar Days Grid -->
+          <div class="cal-grid-cells" id="calGridCells">
+            <!-- Rendered by JS -->
+          </div>
+
+          <!-- Date Note Editor Panel (Opens when any date is clicked) -->
+          <div class="cal-note-panel" id="calNotePanel" style="display: none;">
+            <div class="cal-note-header">
+              <div>
+                <strong id="selectedDateTitle">Friday, Oct 24, 2026</strong>
+                <span class="cal-note-sub" id="selectedDateStatus">No Workout Logged</span>
+              </div>
+              <button class="text-btn" id="closeCalNoteBtn" title="Close note panel">✕</button>
+            </div>
+            
+            <textarea id="calNoteInput" class="cal-note-textarea" placeholder="Add notes for this date (e.g. pressure level, feelings, recovery notes, measurements)..." rows="3"></textarea>
+            
+            <div class="cal-note-actions">
+              <button class="secondary-btn danger" id="deleteCalNoteBtn">Remove Note</button>
+              <button class="primary-btn" id="saveCalNoteBtn">Save Note</button>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- Logged Sessions -->
+      <div class="card history-card">
+        <div class="section-top">
+          <h3>Workout History</h3>
+          <button class="text-btn danger" id="clearHistoryBtn">Clear Log</button>
+        </div>
+        <div class="history-rows" id="historyLogContainer">
+          <!-- Filled by JS -->
+        </div>
+      </div>
+
+    </main>
+
+  </div>
+
+  <!-- ================================================================= -->
+  <!-- MODAL: DEDICATED REST / BREAK TIME EDITOR -->
+  <!-- ================================================================= -->
+  <div class="modal-bg" id="restEditModal" style="display: none;">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3>☕ Edit Rest / Break Time</h3>
+        <button class="close-x" id="closeRestModalBtn">&times;</button>
+      </div>
+
+      <p class="section-sub" style="margin-bottom: 14px;">Select a quick preset or type any custom break duration:</p>
+
+      <!-- Quick 1-Tap Presets -->
+      <div class="preset-label">Quick Presets:</div>
+      <div class="preset-chips-grid">
+        <button type="button" class="preset-chip" data-secs="30">30s</button>
+        <button type="button" class="preset-chip" data-secs="45">45s</button>
+        <button type="button" class="preset-chip active" data-secs="60">1 min</button>
+        <button type="button" class="preset-chip" data-secs="90">1m 30s</button>
+        <button type="button" class="preset-chip" data-secs="120">2 min</button>
+        <button type="button" class="preset-chip" data-secs="180">3 min</button>
+      </div>
+
+      <!-- Custom Minutes & Seconds Input -->
+      <div class="field" style="margin-top: 16px;">
+        <label>Or Enter Custom Time:</label>
+        <div class="input-unit-dual" style="background:var(--bg-page); border:1px solid var(--border-light); padding:8px 12px; border-radius:6px;">
+          <input type="number" id="customRestMin" min="0" max="60" value="1" style="width:70px; border:none; padding:4px; font-size:1.1rem; font-weight:700;">
+          <span style="font-weight:600; color:var(--text-secondary);">min</span>
+          <input type="number" id="customRestSec" min="0" max="59" value="0" style="width:70px; border:none; padding:4px; font-size:1.1rem; font-weight:700; margin-left:10px;">
+          <span style="font-weight:600; color:var(--text-secondary);">sec</span>
+        </div>
+      </div>
+
+      <div class="modal-btns">
+        <button type="button" class="secondary-btn" id="cancelRestModalBtn">Cancel</button>
+        <button type="button" class="primary-btn" id="saveRestModalBtn">Save Rest Time</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================================================================= -->
+  <!-- MODAL: ADD / EDIT FULL EXERCISE -->
+  <!-- ================================================================= -->
+  <div class="modal-bg" id="exerciseModal" style="display: none;">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3 id="modalTitle">Edit Exercise</h3>
+        <button class="close-x" id="closeModalBtn">&times;</button>
+      </div>
+
+      <form id="exerciseForm">
+        <input type="hidden" id="editExerciseId">
+
+        <div class="field">
+          <label for="fName">Exercise Name</label>
+          <input type="text" id="fName" required placeholder="e.g. Jelq Routine, Kegels...">
+        </div>
+
+        <div class="field">
+          <label for="fNotes">Simple Notes</label>
+          <input type="text" id="fNotes" placeholder="e.g. 3 min per rep, slow pace...">
+        </div>
+
+        <div class="field">
+          <label>Tracking Mode</label>
+          <div class="radio-box-group">
+            <label class="radio-box">
+              <input type="radio" name="fMode" value="timed" checked id="modeTimed">
+              <div>
+                <strong>⏱️ Timed Intervals</strong>
+                <span>Auto-countdown: Prep ➔ Exercise ➔ Break</span>
+              </div>
+            </label>
+            <label class="radio-box">
+              <input type="radio" name="fMode" value="untimed" id="modeUntimed">
+              <div>
+                <strong>🕒 Timestamp Log</strong>
+                <span>No countdown timer. Records exact start time and elapsed minutes</span>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- Timed settings -->
+        <div id="timedConfigFields" class="field-group">
+          <div class="field-row">
+            <div class="field">
+              <label for="fPrep">Prep Time</label>
+              <div class="input-unit">
+                <input type="number" id="fPrep" min="0" max="300" value="30">
+                <span>seconds</span>
+              </div>
+            </div>
+            <div class="field">
+              <label>Exercise Time</label>
+              <div class="input-unit-dual">
+                <input type="number" id="fWorkMinutes" min="0" max="60" value="3">
+                <span>min</span>
+                <input type="number" id="fWorkSeconds" min="0" max="59" value="0">
+                <span>sec</span>
+              </div>
+            </div>
+            <div class="field">
+              <label>Break Time</label>
+              <div class="input-unit-dual">
+                <input type="number" id="fRestMinutes" min="0" max="60" value="1">
+                <span>min</span>
+                <input type="number" id="fRestSeconds" min="0" max="59" value="0">
+                <span>sec</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sets & Reps -->
+        <div class="field-row">
+          <div class="field">
+            <label for="fSets">Sets</label>
+            <input type="number" id="fSets" min="1" max="50" value="3" required>
+          </div>
+          <div class="field">
+            <label for="fReps">Reps per set</label>
+            <input type="number" id="fReps" min="1" max="100" value="3" required>
+          </div>
+        </div>
+
+        <div class="modal-btns">
+          <button type="button" class="secondary-btn" id="cancelModalBtn">Cancel</button>
+          <button type="submit" class="primary-btn" id="saveExerciseBtn">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================================================================= -->
+  <!-- MODAL: WORKOUT COMPLETE -->
+  <!-- ================================================================= -->
+  <div class="modal-bg" id="completionModal" style="display: none;">
+    <div class="modal-card dialog-center">
+      <div class="done-check">✓</div>
+      <h2>Workout Logged!</h2>
+      <p>Session recorded toward your 5-day goal.</p>
+      
+      <div class="done-summary" id="celebrationStats">
+        <!-- Rendered via JS -->
+      </div>
+
+      <button class="primary-btn full" id="dismissCelebrationBtn">Done</button>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
